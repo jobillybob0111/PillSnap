@@ -3,14 +3,15 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pill, Sun, Moon, Camera, X, Loader2, Cross, Shield, Upload, Check } from 'lucide-react';
+import { Pill, Camera, X, Loader2, Cross, Shield, Upload, Check, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AmbientBackground } from '@/components/AmbientBackground';
+import { WelcomeBackground } from '@/components/WelcomeBackground';
 import { TrustBadge } from '@/components/TrustBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { LoadingScreen } from '@/components/LoadingScreen';
+import { IdentifyBurst } from '@/components/IdentifyBurst';
 import { cn } from '@/lib/utils';
 
 const COLORS = [
@@ -52,11 +53,11 @@ function ConfidenceBar({ score }: { score: number }) {
   const variant = score >= 80 ? 'success' : score >= 60 ? 'warning' : 'danger';
   const width = Math.min(100, Math.max(0, score));
   return (
-    <div className="h-2.5 w-28 overflow-hidden rounded-full bg-white/5">
+    <div className="h-2.5 w-28 overflow-hidden rounded-full bg-pink-100">
       <motion.div
         initial={{ width: 0 }}
         animate={{ width: `${width}%` }}
-        transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
         className={cn(
           'h-full rounded-full',
           variant === 'success' && 'bg-emerald-500',
@@ -143,7 +144,6 @@ export default function Home() {
   const [backFile, setBackFile] = useState<File | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
@@ -151,14 +151,8 @@ export default function Home() {
   const imprintInputRef = useRef<HTMLInputElement>(null);
   const suggestListRef = useRef<HTMLUListElement>(null);
   const justSelectedRef = useRef(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const saved = localStorage.getItem('pillsnap-theme');
-    const isDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    setDarkMode(isDark);
-    document.documentElement.classList.toggle('dark', isDark);
-  }, []);
+  const identifyButtonRef = useRef<HTMLButtonElement>(null);
+  const [burstOrigin, setBurstOrigin] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const q = imprint.trim();
@@ -214,13 +208,6 @@ export default function Home() {
     const el = suggestListRef.current.querySelector(`[data-index="${selectedIndex}"]`);
     el?.scrollIntoView({ block: 'nearest' });
   }, [selectedIndex, suggestOpen]);
-
-  const toggleDarkMode = () => {
-    const next = !darkMode;
-    setDarkMode(next);
-    document.documentElement.classList.toggle('dark', next);
-    localStorage.setItem('pillsnap-theme', next ? 'dark' : 'light');
-  };
 
   const startCamera = async (slot: 'front' | 'back') => {
     try {
@@ -278,6 +265,12 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    if (!burstOrigin) return;
+    const t = setTimeout(() => setBurstOrigin(null), 750);
+    return () => clearTimeout(t);
+  }, [burstOrigin]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -286,6 +279,10 @@ export default function Home() {
     if (!hasImprint) {
       setError('Please enter the pill imprint (letters/numbers on the pill).');
       return;
+    }
+    if (identifyButtonRef.current) {
+      const rect = identifyButtonRef.current.getBoundingClientRect();
+      setBurstOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
     }
     setLoading(true);
     try {
@@ -331,287 +328,266 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen flex flex-col">
-      <AmbientBackground />
+      <WelcomeBackground />
 
       <motion.header
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="sticky top-0 z-40 border-b border-white/10 bg-black/20 backdrop-blur-xl"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+        className="sticky top-0 z-40 border-b border-gray-200/80 bg-white"
       >
         <div className="mx-auto flex h-16 max-w-clinical items-center justify-between px-4 sm:px-6">
           <Link
             href="/"
-            className="flex items-center gap-2.5 text-foreground transition-all duration-300 hover:opacity-90 group"
+            className="flex items-center gap-2.5 text-foreground transition-colors duration-200 hover:opacity-90"
           >
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-glow transition-shadow duration-300 group-hover:shadow-glow-lg">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-medical-red text-white">
               <Pill className="h-4 w-4" strokeWidth={2} />
               <Cross className="absolute bottom-1 right-1 h-2 w-2 text-white" strokeWidth={2.5} />
             </div>
-            <span className="text-xl font-semibold tracking-tight">PillSnap</span>
+            <span className="text-xl font-semibold tracking-tight text-gray-800">
+              Pill<span className="text-medical-red">Snap</span>
+            </span>
           </Link>
-          <nav className="flex items-center gap-3">
+          <nav className="flex items-center gap-4">
             <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               About
             </Link>
             <Link href="/creators" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Creators
             </Link>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleDarkMode}
-              aria-label="Toggle dark mode"
-              className="h-9 w-9 rounded-full p-0 border border-transparent hover:border-white/10"
-            >
-              {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
           </nav>
         </div>
       </motion.header>
 
-      <main className="relative flex-1 mx-auto w-full max-w-clinical px-4 pt-6 pb-16 sm:px-6">
-        {/* Hero - slight upward centering */}
+      <main className="relative flex-1 mx-auto w-full max-w-clinical px-4 pt-8 pb-16 sm:px-6">
+        {/* Hero - warm and reassuring */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="text-center mb-14"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="text-center mb-12"
         >
-          <div className="relative inline-block mb-4">
-            <motion.div
-              animate={{ opacity: [0.6, 1, 0.6] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute inset-0 rounded-full bg-cyan-500/20 blur-3xl scale-150 -translate-y-1/2"
-              style={{ top: '50%' }}
-            />
-            <div className="relative flex justify-center">
-              <Pill className="h-10 w-10 text-cyan-400/90" strokeWidth={1.5} />
-            </div>
-          </div>
-          <h1
-            className="text-4xl font-bold tracking-tight sm:text-5xl bg-gradient-to-r from-cyan-200 via-blue-200 to-cyan-300 bg-clip-text text-transparent"
-          >
+          <h1 className="text-3xl font-bold tracking-tight text-gray-800 sm:text-4xl">
             PillSnap
           </h1>
-          <p className="mt-3 text-lg text-muted-foreground">
-            Identify medications safely and instantly.
+          <span className="block mt-2 h-0.5 w-16 mx-auto rounded-full bg-medical-red/80" aria-hidden />
+          <p className="mt-4 text-lg text-muted-foreground">
+            Identify medications safely and confidently.
           </p>
-          <p className="mt-1 text-sm text-muted-foreground/80">
-            Powered by verified pharmaceutical databases.
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Designed to support everyday medication safety.
           </p>
         </motion.div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Main upload card - floating clinical console */}
+          {/* Main card - welcoming medical panel */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="relative"
+            transition={{ duration: 0.45, delay: 0.05, ease: 'easeOut' }}
           >
-            <div className="absolute -inset-px rounded-[24px] bg-gradient-to-b from-cyan-500/10 to-transparent opacity-60 blur-sm pointer-events-none" />
-            <motion.div
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.2 }}
-              className="relative rounded-[24px] overflow-hidden shadow-card-clinical border border-white/10 bg-[rgba(15,23,42,0.7)] backdrop-blur-xl"
-              style={{ boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.06)' }}
-            >
-              <div className="absolute inset-0 rounded-[24px] bg-cyan-500/5 pointer-events-none animate-pulse" style={{ animationDuration: '4s' }} />
-              <Card className="border-0 bg-transparent shadow-none">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg text-foreground">Upload & details</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Optional photos. Identification is based on the imprint you enter below.
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-muted-foreground">Front</label>
-                      <div
-                        onClick={() => frontRef.current?.click()}
-                        className={cn(
-                          'flex h-36 cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200',
-                          'border-white/15 bg-white/5 hover:border-cyan-500/40 hover:bg-white/[0.08] hover:shadow-[0_0_20px_-5px_rgba(34,211,238,0.15)]',
-                          'active:scale-[0.99]'
-                        )}
-                      >
-                        {frontPreview ? (
-                          <div className="relative h-full w-full rounded-2xl overflow-hidden">
-                            <img src={frontPreview} alt="Front" className="h-full w-full object-cover" />
-                            <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/90 text-white">
-                              <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-                            </div>
+            <Card className="rounded-[24px] border border-pink-200/60 bg-white shadow-soft overflow-hidden">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg text-foreground">Upload & details</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Optional photos. Identification is based on the imprint you enter below.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Front</label>
+                    <div
+                      onClick={() => frontRef.current?.click()}
+                      className={cn(
+                        'flex h-36 cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200',
+                        'border-rose-200 bg-pink-50/80 hover:border-rose-400 hover:bg-pink-100/80',
+                        'active:scale-[0.99]'
+                      )}
+                    >
+                      {frontPreview ? (
+                        <div className="relative h-full w-full rounded-2xl overflow-hidden">
+                          <img src={frontPreview} alt="Front" className="h-full w-full object-cover" />
+                          <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
+                            <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
                           </div>
-                        ) : (
-                          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                            <Upload className="h-8 w-8" strokeWidth={1.5} />
-                            <span className="text-sm">Click to upload</span>
-                          </div>
-                        )}
-                      </div>
-                      <input ref={frontRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e, setFrontPreview, setFrontFile)} />
-                      <div className="mt-2 flex gap-2">
-                        <Button type="button" variant="outline" size="sm" onClick={() => startCamera('front')} className="rounded-xl border-white/20 bg-white/5 hover:bg-white/10">
-                          <Camera className="mr-1.5 h-3.5 w-3.5" /> Camera
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2 text-rose-700/80">
+                          <Upload className="h-8 w-8" strokeWidth={1.5} />
+                          <span className="text-sm">Click to upload</span>
+                        </div>
+                      )}
+                    </div>
+                    <input ref={frontRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e, setFrontPreview, setFrontFile)} />
+                    <div className="mt-2 flex gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => startCamera('front')} className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50">
+                        <Camera className="mr-1.5 h-3.5 w-3.5" /> Camera
+                      </Button>
+                      {frontPreview && (
+                        <Button type="button" variant="ghost" size="sm" onClick={() => { setFrontPreview(null); setFrontFile(null); }} className="text-muted-foreground">
+                          <X className="h-3.5 w-3.5" /> Remove
                         </Button>
-                        {frontPreview && (
-                          <Button type="button" variant="ghost" size="sm" onClick={() => { setFrontPreview(null); setFrontFile(null); }}>
-                            <X className="h-3.5 w-3.5" /> Remove
-                          </Button>
-                        )}
-                      </div>
+                      )}
                     </div>
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-muted-foreground">Back</label>
-                      <div
-                        onClick={() => backRef.current?.click()}
-                        className={cn(
-                          'flex h-36 cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200',
-                          'border-white/15 bg-white/5 hover:border-cyan-500/40 hover:bg-white/[0.08] hover:shadow-[0_0_20px_-5px_rgba(34,211,238,0.15)]',
-                          'active:scale-[0.99]'
-                        )}
-                      >
-                        {backPreview ? (
-                          <div className="relative h-full w-full rounded-2xl overflow-hidden">
-                            <img src={backPreview} alt="Back" className="h-full w-full object-cover" />
-                            <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/90 text-white">
-                              <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-                            </div>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">Back</label>
+                    <div
+                      onClick={() => backRef.current?.click()}
+                      className={cn(
+                        'flex h-36 cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200',
+                        'border-rose-200 bg-pink-50/80 hover:border-rose-400 hover:bg-pink-100/80',
+                        'active:scale-[0.99]'
+                      )}
+                    >
+                      {backPreview ? (
+                        <div className="relative h-full w-full rounded-2xl overflow-hidden">
+                          <img src={backPreview} alt="Back" className="h-full w-full object-cover" />
+                          <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
+                            <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
                           </div>
-                        ) : (
-                          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                            <Upload className="h-8 w-8" strokeWidth={1.5} />
-                            <span className="text-sm">Click to upload</span>
-                          </div>
-                        )}
-                      </div>
-                      <input ref={backRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e, setBackPreview, setBackFile)} />
-                      <div className="mt-2 flex gap-2">
-                        <Button type="button" variant="outline" size="sm" onClick={() => startCamera('back')} className="rounded-xl border-white/20 bg-white/5 hover:bg-white/10">
-                          <Camera className="mr-1.5 h-3.5 w-3.5" /> Camera
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2 text-rose-700/80">
+                          <Upload className="h-8 w-8" strokeWidth={1.5} />
+                          <span className="text-sm">Click to upload</span>
+                        </div>
+                      )}
+                    </div>
+                    <input ref={backRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e, setBackPreview, setBackFile)} />
+                    <div className="mt-2 flex gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => startCamera('back')} className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50">
+                        <Camera className="mr-1.5 h-3.5 w-3.5" /> Camera
+                      </Button>
+                      {backPreview && (
+                        <Button type="button" variant="ghost" size="sm" onClick={() => { setBackPreview(null); setBackFile(null); }} className="text-muted-foreground">
+                          <X className="h-3.5 w-3.5" /> Remove
                         </Button>
-                        {backPreview && (
-                          <Button type="button" variant="ghost" size="sm" onClick={() => { setBackPreview(null); setBackFile(null); }}>
-                            <X className="h-3.5 w-3.5" /> Remove
-                          </Button>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
+                </div>
 
-                  <div className="relative">
-                    <label htmlFor="imprint" className="mb-2 block text-sm font-medium text-foreground">Pill imprint (required)</label>
-                    <Input
-                      ref={imprintInputRef}
-                      id="imprint"
-                      type="text"
-                      autoComplete="off"
-                      value={imprint}
-                      onChange={(e) => setImprint(e.target.value)}
-                      onFocus={() => suggestions.length > 0 && setSuggestOpen(true)}
-                      onBlur={() => setTimeout(() => setSuggestOpen(false), 180)}
-                      onKeyDown={handleImprintKeyDown}
-                      placeholder="e.g. L484, lupin 20"
-                      className="h-12 rounded-xl border-white/20 bg-white/5 placeholder:text-muted-foreground/70 focus-visible:ring-cyan-500/50 focus-visible:ring-2"
-                    />
-                    {suggestOpen && (suggestions.length > 0 || suggestLoading) && (
-                      <ul
-                        ref={suggestListRef}
-                        role="listbox"
-                        className="absolute top-full left-0 right-0 z-20 mt-2 max-h-52 overflow-auto rounded-xl border border-white/10 bg-[rgba(15,23,42,0.95)] backdrop-blur-xl py-1 shadow-card-clinical"
-                      >
-                        {suggestLoading && (
-                          <li className="px-4 py-3 text-sm text-muted-foreground">Loading…</li>
-                        )}
-                        {!suggestLoading && suggestions.map((s, i) => (
-                          <li
-                            key={s}
-                            data-index={i}
-                            role="option"
-                            aria-selected={i === selectedIndex}
-                            onClick={() => selectSuggestion(s)}
-                            onMouseDown={(e) => e.preventDefault()}
-                            className={cn(
-                              'cursor-pointer px-4 py-2.5 text-sm transition-colors rounded-lg mx-1',
-                              i === selectedIndex ? 'bg-cyan-500/20 text-cyan-200' : 'hover:bg-white/10 text-foreground'
-                            )}
-                          >
-                            {s}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="color" className="mb-2 block text-sm font-medium text-muted-foreground">Color (optional)</label>
-                      <select
-                        id="color"
-                        value={color}
-                        onChange={(e) => setColor(e.target.value)}
-                        className="flex h-12 w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/30 transition-all"
-                      >
-                        <option value="">Any color</option>
-                        {COLORS.map((c) => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label htmlFor="shape" className="mb-2 block text-sm font-medium text-muted-foreground">Shape (optional)</label>
-                      <select
-                        id="shape"
-                        value={shape}
-                        onChange={(e) => setShape(e.target.value)}
-                        className="flex h-12 w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/30 transition-all"
-                      >
-                        <option value="">Any shape</option>
-                        {SHAPES.map((s) => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    size="lg"
-                    className="w-full h-14 rounded-xl text-base font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 text-[#0B1220] shadow-glow hover:shadow-glow-lg hover:from-cyan-400 hover:to-blue-500 focus-visible:ring-2 focus-visible:ring-cyan-400/50 active:scale-[0.97] transition-all duration-200 relative overflow-hidden"
-                  >
-                    {loading ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-                          className="flex items-center justify-center"
+                <div className="relative">
+                  <label htmlFor="imprint" className="mb-2 block text-sm font-medium text-foreground">Pill imprint (required)</label>
+                  <Input
+                    ref={imprintInputRef}
+                    id="imprint"
+                    type="text"
+                    autoComplete="off"
+                    value={imprint}
+                    onChange={(e) => setImprint(e.target.value)}
+                    onFocus={() => suggestions.length > 0 && setSuggestOpen(true)}
+                    onBlur={() => setTimeout(() => setSuggestOpen(false), 180)}
+                    onKeyDown={handleImprintKeyDown}
+                    placeholder="e.g. L484, lupin 20"
+                    className="h-12 rounded-xl text-base border-gray-200 bg-white focus-visible:ring-rose-500/30 focus-visible:border-rose-400"
+                  />
+                  {suggestOpen && (suggestions.length > 0 || suggestLoading) && (
+                    <ul
+                      ref={suggestListRef}
+                      role="listbox"
+                      className="absolute top-full left-0 right-0 z-20 mt-2 max-h-52 overflow-auto rounded-xl border border-gray-200 bg-white py-1 shadow-soft-lg"
+                    >
+                      {suggestLoading && (
+                        <li className="px-4 py-3 text-sm text-muted-foreground">Loading…</li>
+                      )}
+                      {!suggestLoading && suggestions.map((s, i) => (
+                        <li
+                          key={s}
+                          data-index={i}
+                          role="option"
+                          aria-selected={i === selectedIndex}
+                          onClick={() => selectSuggestion(s)}
+                          onMouseDown={(e) => e.preventDefault()}
+                          className={cn(
+                            'cursor-pointer px-4 py-2.5 text-sm transition-colors rounded-lg mx-1',
+                            i === selectedIndex ? 'bg-rose-50 text-medical-red' : 'hover:bg-gray-50 text-foreground'
+                          )}
                         >
-                          <Pill className="h-5 w-5" strokeWidth={2} />
-                        </motion.div>
-                        Identifying…
-                      </span>
-                    ) : (
-                      'Identify Pill'
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
+                          {s}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="color" className="mb-2 block text-sm font-medium text-muted-foreground">Color (optional)</label>
+                    <select
+                      id="color"
+                      value={color}
+                      onChange={(e) => setColor(e.target.value)}
+                      className="flex h-12 w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-all"
+                    >
+                      <option value="">Any color</option>
+                      {COLORS.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="shape" className="mb-2 block text-sm font-medium text-muted-foreground">Shape (optional)</label>
+                    <select
+                      id="shape"
+                      value={shape}
+                      onChange={(e) => setShape(e.target.value)}
+                      className="flex h-12 w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-all"
+                    >
+                      <option value="">Any shape</option>
+                      {SHAPES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <Button
+                  ref={identifyButtonRef}
+                  type="submit"
+                  disabled={loading}
+                  size="lg"
+                  className="w-full h-14 rounded-full text-base font-semibold bg-medical-red text-white hover:opacity-95 focus-visible:ring-2 focus-visible:ring-rose-500/30 active:scale-[0.98] transition-all duration-200"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                        className="flex items-center justify-center"
+                      >
+                        <Pill className="h-5 w-5 text-white" strokeWidth={2} />
+                      </motion.div>
+                      Identifying…
+                    </span>
+                  ) : (
+                    'Identify Pill'
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
           </motion.div>
 
           {error && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200"
+              className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
             >
               {error}
             </motion.div>
           )}
         </form>
+
+        {/* Burst effect on Identify click */}
+        <AnimatePresence>
+          {burstOrigin && (
+            <IdentifyBurst key="burst" origin={burstOrigin} />
+          )}
+        </AnimatePresence>
 
         {/* Full-screen loading */}
         <AnimatePresence mode="wait">
@@ -622,15 +598,15 @@ export default function Home() {
         <AnimatePresence>
           {result && !loading && (
             <motion.section
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="mt-14 space-y-8"
+              transition={{ duration: 0.45, ease: 'easeOut' }}
+              className="mt-12 space-y-8"
             >
               <div>
                 <h2 className="text-xl font-semibold text-foreground">Results</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1.5 text-sm text-muted-foreground">
                   Matched imprint: <strong className="text-foreground">{result.imprint}</strong>
                   {(result.searchColor || result.searchShape) && (
                     <span className="ml-2">• {[result.searchColor, result.searchShape].filter(Boolean).join(', ')}</span>
@@ -648,32 +624,29 @@ export default function Home() {
                   {result.results.map((r, i) => (
                     <motion.div
                       key={i}
-                      initial={{ opacity: 0, y: 16 }}
+                      initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.1, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-                      className={cn(
-                        i === 0 && 'relative rounded-2xl ring-1 ring-cyan-500/20 shadow-[0_0_40px_-8px_rgba(34,211,238,0.2)]'
-                      )}
+                      transition={{ delay: i * 0.08, duration: 0.4, ease: 'easeOut' }}
                     >
                       <Card className={cn(
-                        'overflow-hidden rounded-2xl border border-white/10 bg-[rgba(15,23,42,0.6)] backdrop-blur-xl shadow-card-clinical transition-shadow hover:shadow-card-clinical',
-                        i === 0 && 'border-l-4 border-l-cyan-500'
+                        'overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-soft',
+                        i === 0 && 'border-l-4 border-l-medical-red'
                       )}>
                         <div className="grid grid-cols-[auto_1fr] gap-6 p-6">
                           <div className="flex items-center gap-4">
                             {(frontPreview || backPreview) && (
                               <>
                                 <div className="text-center">
-                                  <div className="h-28 w-28 overflow-hidden rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                                  <div className="h-28 w-28 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
                                     <img src={frontPreview || backPreview!} alt="Your pill" className="h-full w-full object-contain" />
                                   </div>
                                   <p className="mt-1.5 text-xs text-muted-foreground">Your upload</p>
                                 </div>
-                                <div className="h-12 w-px bg-white/10" aria-hidden />
+                                <div className="h-12 w-px bg-gray-200" aria-hidden />
                               </>
                             )}
                             <div className="text-center">
-                              <div className="h-28 w-28 overflow-hidden rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                              <div className="h-28 w-28 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
                                 {r.image_url ? (
                                   <ResultPillImage imageUrl={r.image_url} alt={`${r.drug_name}`} />
                                 ) : (
@@ -685,10 +658,10 @@ export default function Home() {
                           </div>
                           <div>
                             <div className="flex flex-wrap items-center gap-3">
-                              <div className="h-8 w-1 shrink-0 rounded-full bg-cyan-500" aria-hidden />
-                              <h3 className="text-lg font-bold text-foreground">{r.drug_name}</h3>
-                              <span className="flex items-center gap-1.5 shrink-0 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1">
-                                <Shield className="h-3.5 w-3.5 text-cyan-400" strokeWidth={2} />
+                              <div className="h-8 w-1 shrink-0 rounded-full bg-medical-red" aria-hidden />
+                              <h3 className="text-xl font-bold text-foreground">{r.drug_name}</h3>
+                              <span className="flex items-center gap-1.5 shrink-0 rounded-lg border border-gray-200 bg-gray-50/80 px-2.5 py-1">
+                                <Shield className="h-3.5 w-3.5 text-medical-red" strokeWidth={2} />
                                 <ConfidenceBar score={r.confidence} />
                                 <span className="text-xs font-medium text-muted-foreground">{r.confidence}%</span>
                               </span>
@@ -699,8 +672,10 @@ export default function Home() {
                                 Imprint: {r.imprint || '—'} • Color: {r.color || '—'} • Shape: {r.shape || '—'}
                               </p>
                             )}
-                            <p className="mt-3 text-sm"><strong className="text-foreground">Class:</strong> {r.drug_class}</p>
-                            <p className="mt-1 text-sm"><strong className="text-foreground">Common uses:</strong> {r.uses}</p>
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                              <p className="text-sm"><strong className="text-foreground">Class:</strong> {r.drug_class}</p>
+                              <p className="mt-1 text-sm"><strong className="text-foreground">Common uses:</strong> {r.uses}</p>
+                            </div>
                           </div>
                         </div>
                       </Card>
@@ -720,14 +695,14 @@ export default function Home() {
                     return (
                       <motion.div
                         key={i}
-                        initial={{ opacity: 0, y: 16 }}
+                        initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 + i * 0.1, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        transition={{ delay: 0.1 + i * 0.08, duration: 0.4, ease: 'easeOut' }}
                       >
-                        <Card className="rounded-2xl border border-amber-500/20 bg-[rgba(15,23,42,0.5)] backdrop-blur-xl overflow-hidden">
+                        <Card className="rounded-2xl border border-amber-200 bg-amber-50/50 overflow-hidden">
                           <div className="grid grid-cols-[auto_1fr] gap-6 p-6">
                             <div className="text-center">
-                              <div className="h-28 w-28 overflow-hidden rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                              <div className="h-28 w-28 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
                                 {r.image_url ? (
                                   <ResultPillImage imageUrl={r.image_url} alt={`${r.drug_name}`} />
                                 ) : (
@@ -738,7 +713,7 @@ export default function Home() {
                             </div>
                             <div>
                               <div className="flex flex-wrap items-center gap-3">
-                                <h3 className="text-lg font-bold text-foreground">{r.drug_name}</h3>
+                                <h3 className="text-xl font-bold text-foreground">{r.drug_name}</h3>
                                 <span className="flex items-center gap-1.5">
                                   <Shield className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
                                   <ConfidenceBar score={r.confidence} />
@@ -746,11 +721,13 @@ export default function Home() {
                                 </span>
                               </div>
                               {diff && (
-                                <p className="mt-1 text-xs text-amber-400">{diff}</p>
+                                <p className="mt-1 text-xs text-amber-700">{diff}</p>
                               )}
                               <p className="mt-1 text-sm text-muted-foreground">{r.generic_name} • {r.strength}</p>
-                              <p className="mt-3 text-sm"><strong className="text-foreground">Class:</strong> {r.drug_class}</p>
-                              <p className="mt-1 text-sm"><strong className="text-foreground">Common uses:</strong> {r.uses}</p>
+                              <div className="mt-4 pt-4 border-t border-amber-100">
+                                <p className="text-sm"><strong className="text-foreground">Class:</strong> {r.drug_class}</p>
+                                <p className="mt-1 text-sm"><strong className="text-foreground">Common uses:</strong> {r.uses}</p>
+                              </div>
                             </div>
                           </div>
                         </Card>
@@ -762,9 +739,9 @@ export default function Home() {
 
               <TrustBadge />
 
-              <Card className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl">
+              <Card className="rounded-2xl border border-gray-200 bg-gray-50/80">
                 <CardContent className="py-4">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     <strong className="text-foreground">Disclaimer:</strong> {result.disclaimer}
                   </p>
                 </CardContent>
@@ -781,12 +758,12 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 p-4"
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-900/85 p-4"
           >
-            <video ref={videoRef} autoPlay playsInline className="max-h-[70vh] w-auto rounded-2xl" />
+            <video ref={videoRef} autoPlay playsInline className="max-h-[70vh] w-auto rounded-2xl shadow-soft-lg" />
             <div className="mt-6 flex gap-3">
-              <Button onClick={captureFromCamera}>Capture</Button>
-              <Button variant="outline" onClick={stopCamera}>Cancel</Button>
+              <Button onClick={captureFromCamera} className="bg-medical-red hover:opacity-95 text-white">Capture</Button>
+              <Button variant="outline" onClick={stopCamera} className="border-white/30 bg-white/10 text-white hover:bg-white/20">Cancel</Button>
             </div>
           </motion.div>
         )}

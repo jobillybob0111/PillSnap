@@ -4,91 +4,50 @@
 
 @layer base {
   :root {
-    /* Deep navy clinical theme */
-    --background: 220 35% 7%;
-    --foreground: 210 25% 96%;
-    --card: 220 28% 11%;
-    --card-foreground: 210 25% 96%;
-    --primary: 195 100% 50%;
-    --primary-foreground: 220 35% 7%;
-    --muted: 220 25% 14%;
-    --muted-foreground: 215 20% 58%;
-    --border: 220 20% 18%;
+    /* Welcoming hospital theme */
+    --background: 180 20% 99%;
+    --foreground: 220 15% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 20%;
+    --primary: 347 77% 50%;
+    --primary-foreground: 0 0% 100%;
+    --muted: 350 30% 97%;
+    --muted-foreground: 220 10% 45%;
+    --border: 220 15% 90%;
     --success: 142 71% 45%;
     --warning: 38 92% 50%;
     --danger: 0 72% 51%;
-    --navy-base: 220 35% 7%;
+    --medical-red: 347 77% 50%;
+    --blush: 330 80% 90%;
   }
 
   .dark {
-    --background: 220 35% 7%;
-    --foreground: 210 25% 96%;
-    --card: 220 28% 11%;
-    --card-foreground: 210 25% 96%;
-    --primary: 195 100% 55%;
-    --primary-foreground: 220 35% 7%;
-    --muted: 220 25% 14%;
-    --muted-foreground: 215 20% 58%;
-    --border: 220 20% 18%;
-    --success: 142 71% 45%;
-    --warning: 38 92% 50%;
-    --danger: 0 72% 51%;
+    --background: 180 20% 99%;
+    --foreground: 220 15% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 20%;
+    --primary: 347 77% 50%;
+    --primary-foreground: 0 0% 100%;
+    --muted: 350 30% 97%;
+    --muted-foreground: 220 10% 45%;
+    --border: 220 15% 90%;
   }
 }
 
 body {
-  @apply bg-[#0B1220] text-[hsl(var(--foreground))] antialiased;
+  @apply bg-[#FDFEFE] text-[hsl(var(--foreground))] antialiased;
+  font-size: 1rem;
 }
 
-/* Base canvas: layered radial gradients (soft cyan/blue) */
-.bg-clinical-base {
-  background-color: #0B1220;
+/* Soft radial pink in corners */
+.bg-hospital-base {
+  background-color: #FDFEFE;
   background-image:
-    radial-gradient(ellipse 120% 80% at 70% 20%, rgba(34, 211, 238, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse 100% 60% at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse 80% 50% at 50% 50%, rgba(56, 189, 248, 0.06) 0%, transparent 45%);
+    radial-gradient(ellipse 80% 60% at 100% 0%, rgba(255, 245, 247, 0.9) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 50% at 0% 100%, rgba(255, 245, 247, 0.7) 0%, transparent 50%);
 }
 
-/* Vignette */
-.vignette {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 80% 80% at 50% 50%,
-    transparent 40%,
-    rgba(0, 0, 0, 0.35) 100%
-  );
-}
-
-/* Subtle grain overlay */
-.grain {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  opacity: 0.04;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-}
-
-/* Floating gradient blob (for use in JS-animated blobs) */
-.blob {
-  border-radius: 50%;
-  filter: blur(100px);
-  pointer-events: none;
-}
-
-/* Button shimmer */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.animate-shimmer {
-  background-size: 200% 100%;
-  animation: shimmer 2.5s ease-in-out infinite;
-}
-
-/* Soft glow pulse for card */
-@keyframes glow-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.7; }
+/* Soft layered light behind main content (used via component) */
+.bg-card-glow {
+  background: radial-gradient(ellipse 100% 80% at 50% 100%, rgba(249, 168, 212, 0.08) 0%, transparent 60%);
 }
