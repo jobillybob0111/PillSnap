@@ -64,31 +64,67 @@ function scoreResult(
   return imprintScore * 0.6 + colorScore * 0.2 + shapeScore * 0.2;
 }
 
-// drugs.com returns 403 for minimal/bot-like headers; use full browser-like headers so they allow the request
-const FETCH_OPTS: RequestInit = {
-  headers: {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+const FETCH_TIMEOUT_MS = 25000;
+
+// drugs.com returns 403 for minimal/bot-like headers; use full browser-like headers
+function getFetchHeaders(cookie?: string): HeadersInit {
+  const headers: Record<string, string> = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
     Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.9',
-    Referer: 'https://www.drugs.com/imprints.php',
+    Referer: 'https://www.drugs.com/',
     'Sec-Fetch-Dest': 'document',
     'Sec-Fetch-Mode': 'navigate',
     'Sec-Fetch-Site': 'same-origin',
     'Sec-Fetch-User': '?1',
-  },
-};
+    'Upgrade-Insecure-Requests': '1',
+  };
+  if (cookie) headers['Cookie'] = cookie;
+  return headers;
+}
+
+async function fetchWithTimeout(
+  url: string,
+  opts: RequestInit & { cookie?: string } = {}
+): Promise<Response> {
+  const { cookie, ...rest } = opts;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      ...rest,
+      headers: getFetchHeaders(cookie),
+      signal: controller.signal,
+    });
+    return res;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function getSessionCookie(): Promise<string | undefined> {
+  try {
+    const res = await fetchWithTimeout('https://www.drugs.com/imprints.php', { method: 'GET' });
+    const setCookie = res.headers.get('set-cookie');
+    if (setCookie) return setCookie.split(';')[0].trim();
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 async function searchByMainSearch(
   imprint: string,
   color?: string,
   shape?: string,
-  limit = 10
+  limit = 10,
+  cookie?: string
 ): Promise<DrugSearchResult[]> {
   const query = [imprint.trim(), color, shape].filter(Boolean).join(' ');
   const url = `https://www.drugs.com/search.php?searchterm=${encodeURIComponent(query)}`;
   let html: string;
   try {
-    const res = await fetch(url, FETCH_OPTS);
+    const res = await fetchWithTimeout(url, { cookie });
     if (!res.ok) return [];
     html = await res.text();
     if (html.includes('Access Denied') || html.includes('Blocked')) return [];
@@ -215,7 +251,8 @@ async function searchByImprintPage(
   imprint: string,
   color?: string,
   shape?: string,
-  limit = 10
+  limit = 10,
+  cookie?: string
 ): Promise<DrugSearchResult[]> {
   const params = new URLSearchParams();
   params.set('imprint', imprint.trim());
@@ -227,7 +264,7 @@ async function searchByImprintPage(
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch(url, FETCH_OPTS);
+      const res = await fetchWithTimeout(url, { cookie });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       html = await res.text();
       if (html.includes('Access Denied') || html.includes('Blocked')) throw new Error('Blocked');
@@ -308,12 +345,13 @@ export async function searchDrugsCom(
   }
 
   let results: DrugSearchResult[] = [];
+  const cookie = await getSessionCookie();
 
-  results = await searchByMainSearch(imprint, color, shape, limit);
+  results = await searchByMainSearch(imprint, color, shape, limit, cookie);
 
   if (results.length === 0) {
     try {
-      results = await searchByImprintPage(imprint, color, shape, limit);
+      results = await searchByImprintPage(imprint, color, shape, limit, cookie);
     } catch {
       /* leave results empty */
     }

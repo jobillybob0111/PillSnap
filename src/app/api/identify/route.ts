@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchDrugsCom } from '@/lib/drugs-com-search';
-import { searchPills } from '@/lib/matching';
 import { getReferenceImageUrl, fetchImageFromDetailPage } from '@/lib/fetch-reference-images';
 
 const DISCLAIMER =
@@ -73,53 +72,31 @@ export async function POST(request: NextRequest) {
 
     let results: ResultItem[] = [];
 
-    try {
-      const liveResults = await searchDrugsCom(imprint, undefined, undefined, FETCH_LIMIT);
-      results = await Promise.all(
-        liveResults.map(async (r) => {
-          let imageUrl: string | null = r.image_url || null;
-          if (!imageUrl && r.detail_url) {
-            const fromDetail = await fetchImageFromDetailPage(r.detail_url);
-            if (fromDetail) imageUrl = fromDetail;
-          }
-          if (!imageUrl) {
-            imageUrl = getReferenceImageUrl({ imprint: r.imprint, image_url: r.image_url, detail_url: r.detail_url });
-          }
-          return {
-            drug_name: r.drug_name,
-            generic_name: r.generic_name,
-            strength: r.strength,
-            drug_class: r.drug_class,
-            uses: r.uses,
-            image_url: imageUrl || null,
-            confidence: Math.round(r.confidence * 100),
-            imprint: r.imprint,
-            color: r.color,
-            shape: r.shape,
-          };
-        })
-      );
-    } catch (liveError) {
-      console.warn('Live search failed, falling back to local DB:', liveError);
-      try {
-        const localResults = searchPills(imprint, undefined, undefined, FETCH_LIMIT);
-        results = localResults.map((r) => ({
+    const liveResults = await searchDrugsCom(imprint, undefined, undefined, FETCH_LIMIT);
+    results = await Promise.all(
+      liveResults.map(async (r) => {
+        let imageUrl: string | null = r.image_url || null;
+        if (!imageUrl && r.detail_url) {
+          const fromDetail = await fetchImageFromDetailPage(r.detail_url);
+          if (fromDetail) imageUrl = fromDetail;
+        }
+        if (!imageUrl) {
+          imageUrl = getReferenceImageUrl({ imprint: r.imprint, image_url: r.image_url, detail_url: r.detail_url });
+        }
+        return {
           drug_name: r.drug_name,
           generic_name: r.generic_name,
           strength: r.strength,
           drug_class: r.drug_class,
           uses: r.uses,
-          image_url: r.image_url || getReferenceImageUrl({ imprint: r.imprint }),
+          image_url: imageUrl || null,
           confidence: Math.round(r.confidence * 100),
           imprint: r.imprint,
           color: r.color,
           shape: r.shape,
-        }));
-      } catch (dbError) {
-        console.error('Local DB error:', dbError);
-        results = [];
-      }
-    }
+        };
+      })
+    );
 
     if (results.length === 0) {
       return NextResponse.json(
