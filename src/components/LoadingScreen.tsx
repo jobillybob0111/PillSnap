@@ -9,28 +9,28 @@ export function LoadingScreen() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-background/95 backdrop-blur-sm"
+      transition={{ duration: 0.25 }}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-8 bg-[#0B1220]/98 backdrop-blur-md"
     >
       <motion.div
         animate={{
-          scale: [1, 1.08, 1],
-          opacity: [0.9, 1, 0.9],
+          scale: [1, 1.06, 1],
+          opacity: [0.85, 1, 0.85],
         }}
         transition={{
-          duration: 2,
+          duration: 2.2,
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]"
+        className="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-white/10 text-cyan-400 shadow-glow"
       >
-        <Pill className="h-10 w-10" />
+        <Pill className="h-12 w-12" strokeWidth={1.5} />
       </motion.div>
       <div className="text-center">
         <motion.p
-          initial={{ opacity: 0, y: 4 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
+          transition={{ delay: 0.1 }}
           className="text-lg font-medium text-foreground"
         >
           Identifying your pill…
@@ -38,26 +38,24 @@ export function LoadingScreen() {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.25 }}
-          className="mt-1 text-sm text-muted-foreground"
+          transition={{ delay: 0.2 }}
+          className="mt-1.5 text-sm text-muted-foreground"
         >
-          Searching our database
+          Searching verified databases
         </motion.p>
       </div>
       <motion.div
-        className="h-1 w-48 overflow-hidden rounded-full bg-muted"
+        className="h-1 w-56 overflow-hidden rounded-full bg-white/10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
+        transition={{ delay: 0.25 }}
       >
         <motion.div
-          className="h-full min-w-[40%] rounded-full bg-[hsl(var(--primary))]/80"
-          style={{ width: '40%' }}
-          animate={{
-            x: ['-100%', '250%'],
-          }}
+          className="h-full min-w-[35%] rounded-full bg-gradient-to-r from-cyan-500 to-blue-500"
+          style={{ width: '35%' }}
+          animate={{ x: ['-100%', '350%'] }}
           transition={{
-            duration: 1.8,
+            duration: 2,
             repeat: Infinity,
             ease: 'easeInOut',
           }}
