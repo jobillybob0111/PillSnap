@@ -357,6 +357,12 @@ export default function Home() {
             >
               About
             </Link>
+            <Link
+              href="/creators"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Creators
+            </Link>
             <Button
               variant="ghost"
               size="sm"

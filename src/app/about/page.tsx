@@ -40,6 +40,9 @@ export default function AboutPage() {
               Home
             </Link>
             <span className="text-sm font-medium text-foreground">About</span>
+            <Link href="/creators" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Creators
+            </Link>
             <Button variant="ghost" size="sm" onClick={toggleDarkMode} aria-label="Toggle dark mode" className="h-9 w-9 rounded-lg p-0">
               {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
