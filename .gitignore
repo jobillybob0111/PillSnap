@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+.next/
+out/
+build/
+dist/
+
+# Env and secrets (never commit)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*-key.json
+google-*.json
+
+# Debug and logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE and OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Optional: local data (uncomment if you don't want to track)
+# data/
+# .cache/
