@@ -60,6 +60,8 @@ We focused on clear, accurate results with a strong disclaimer that the tool is 
 
 - **Shiv Patel** — Author  
 - **Ryder Pongracic** — Co-Author  
+- **Hussam Idris** — Co-Author  
+- **Abba Ndomo** — Co-Author  
 
 ---
 

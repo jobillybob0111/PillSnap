@@ -89,6 +89,40 @@ export default function CreatorsPage() {
               </CardContent>
             </Card>
           </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.19, ease: 'easeOut' }}
+          >
+            <Card className="rounded-[24px] border border-pink-200/60 bg-white shadow-soft overflow-hidden">
+              <CardContent className="py-6 flex items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-medical-red">
+                  <User className="h-7 w-7" />
+                </div>
+                <div>
+                  <p className="text-xl font-semibold text-foreground">Hussam Idris</p>
+                  <p className="text-sm text-muted-foreground">Co-Author</p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.26, ease: 'easeOut' }}
+          >
+            <Card className="rounded-[24px] border border-pink-200/60 bg-white shadow-soft overflow-hidden">
+              <CardContent className="py-6 flex items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-medical-red">
+                  <User className="h-7 w-7" />
+                </div>
+                <div>
+                  <p className="text-xl font-semibold text-foreground">Abba Ndomo</p>
+                  <p className="text-sm text-muted-foreground">Co-Author</p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
         <p className="mt-8 text-center">

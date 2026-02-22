@@ -4,6 +4,10 @@ Identify pills using front and back images plus user-entered metadata (imprint, 
 
 **Disclaimer:** This tool is for informational purposes only and does not replace medical advice. Always consult a pharmacist or physician.
 
+## Quick Demo
+
+[Watch a quick demo on YouTube](https://www.youtube.com/watch?v=iUcK5S8r9qk)
+
 ## Features
 
 - **Image-based matching**: Perceptual hashing compares your upload against reference images and boosts confidence for visual matches
