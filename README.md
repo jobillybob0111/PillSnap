@@ -6,13 +6,13 @@ Identify pills using front and back images plus user-entered metadata (imprint, 
 
 ## Features
 
-- **Image-based matching**: Perceptual hashing compares your upload against drugs.com reference images and boosts confidence for visual matches
+- **Image-based matching**: Perceptual hashing compares your upload against reference images and boosts confidence for visual matches
 - Image upload for front and back of pill
 - Optional OCR to extract imprint text from images (Tesseract)
 - Manual input: imprint, color, shape
 - Weighted matching: 60% imprint, 20% color, 20% shape
 - Top 3 ranked results with confidence scores
-- Side-by-side display: your upload next to reference image from drugs.com
+- Side-by-side display: your upload next to reference image
 - Medical disclaimer on all results
 
 ## Quick Start
@@ -54,19 +54,19 @@ Without Tesseract, you can still use the app by entering the imprint text manual
 
 ## How It Works
 
-PillSnap searches **drugs.com** live for any pill imprint. When the live search works, it returns results from their database (thousands of pills). If drugs.com is unreachable (e.g. network restrictions), the app falls back to a local database.
+PillSnap searches **reference** live for any pill imprint. When the live search works, it returns results from their database (thousands of pills). If reference is unreachable (e.g. network restrictions), the app falls back to a local database.
 
 ## Database
 
 The app seeds a JSON database with ~25 common pills on first run. To expand the local fallback database:
 
-### Option 1: Scrape drugs.com (respectful, with delays)
+### Option 1: Scrape (respectful, with delays)
 
 ```bash
 npm run scrape
 ```
 
-Scrapes imprint detail pages from drugs.com, with 1.5s delay between requests.
+Scrapes imprint detail pages from reference, with 1.5s delay between requests.
 
 ### Option 2: Seed script (predefined data)
 
@@ -76,7 +76,7 @@ npm run seed
 
 Resets the database with the built-in seed dataset.
 
-**Note:** The primary source is live search against drugs.com. The local database is a fallback when the external site is unreachable. No hardcoded limit—any pill in drugs.com's database can be found when the live search succeeds.
+**Note:** The primary source is live search against reference. The local database is a fallback when the external site is unreachable. No hardcoded limit—any pill in reference database can be found when the live search succeeds.
 
 ## API
 
@@ -139,7 +139,7 @@ pill-snap/
 │       ├── ocr.ts          # Tesseract OCR
 │       └── seed-data.ts    # Built-in pill data
 ├── scripts/
-│   ├── scrape-imprints.ts  # drugs.com scraper
+│   ├── scrape-imprints.ts  # scraper
 │   └── seed-db.ts          # Manual seed
 ├── Dockerfile
 └── package.json
